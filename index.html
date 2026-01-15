@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>เกมคลายเครียด (กวนประสาท)</title>
+<title>เกมคลายเครียด</title>
 
 <style>
 body {
@@ -44,13 +44,16 @@ button {
     border-radius: 50%;
     position: absolute;
     cursor: pointer;
-    transition: opacity 0.2s;
+    transition: opacity 0.15s;
 }
+
 .real {
     background: url("pon1.png") center/cover;
+    box-shadow: 0 0 15px lime;
 }
+
 .fake {
-    background: red;
+    background: crimson;
 }
 </style>
 </head>
@@ -63,21 +66,23 @@ button {
 </div>
 
 <div id="win" style="display:none">
-    <h1>🎉 เก่งจริง (ฟลุ๊ค)</h1>
-    <button onclick="location.reload()">เริ่มใหม่</button>
+    <h1>🎉 อ่อนให้ (หรือฟลุ๊ค)</h1>
+    <button onclick="location.reload()">เล่นใหม่</button>
 </div>
 
 <div id="gameOver" style="display:none">
-    <h1>❌ โดนหลอกละสิ</h1>
-    <button onclick="location.reload()">เริ่มใหม่</button>
+    <h1>❌ กาก</h1>
+    <button onclick="location.reload()">ลองใหม่</button>
 </div>
 
 <div id="timer">เวลา: 30</div>
 
 <script>
-const TOTAL_CIRCLES = 5; // จำนวนวงทั้งหมด
+const TOTAL_CIRCLES = 5;
+const SIZE = 90;
 const circles = [];
-let realCircleIndex = 0;
+
+let realIndex = 0;
 let timeLeft = 30;
 let gameRunning = false;
 
@@ -92,29 +97,28 @@ function startGame() {
     moveInterval = setInterval(moveCircles, 16);
     timerInterval = setInterval(countdown, 1000);
     directionInterval = setInterval(randomizeDirections, 1200);
-    blinkInterval = setInterval(blinkCircles, 900);
+    blinkInterval = setInterval(blinkCircles, 800);
 }
 
 function createCircles() {
-    realCircleIndex = Math.floor(Math.random() * TOTAL_CIRCLES);
+    realIndex = Math.floor(Math.random() * TOTAL_CIRCLES);
 
     for (let i = 0; i < TOTAL_CIRCLES; i++) {
         const c = document.createElement("div");
-        c.classList.add("circle");
-        c.classList.add(i === realCircleIndex ? "real" : "fake");
+        c.className = "circle " + (i === realIndex ? "real" : "fake");
 
-        c.x = Math.random() * (window.innerWidth - 100);
-        c.y = Math.random() * (window.innerHeight - 100);
+        c.x = Math.random() * (window.innerWidth - SIZE);
+        c.y = Math.random() * (window.innerHeight - SIZE);
         c.vx = randomSpeed();
         c.vy = randomSpeed();
 
         c.style.left = c.x + "px";
         c.style.top = c.y + "px";
 
-        c.addEventListener("click", () => {
+        c.onclick = () => {
             if (!gameRunning) return;
-            i === realCircleIndex ? winGame() : loseGame();
-        });
+            i === realIndex ? winGame() : loseGame();
+        };
 
         document.body.appendChild(c);
         circles.push(c);
@@ -129,14 +133,14 @@ function moveCircles() {
         c.y += c.vy;
 
         if (c.x <= 0) { c.x = 0; c.vx = Math.abs(c.vx); }
-        if (c.x + 90 >= window.innerWidth) {
-            c.x = window.innerWidth - 90;
+        if (c.x + SIZE >= window.innerWidth) {
+            c.x = window.innerWidth - SIZE;
             c.vx = -Math.abs(c.vx);
         }
 
         if (c.y <= 0) { c.y = 0; c.vy = Math.abs(c.vy); }
-        if (c.y + 90 >= window.innerHeight) {
-            c.y = window.innerHeight - 90;
+        if (c.y + SIZE >= window.innerHeight) {
+            c.y = window.innerHeight - SIZE;
             c.vy = -Math.abs(c.vy);
         }
 
@@ -152,20 +156,22 @@ function randomizeDirections() {
     });
 }
 
+// 👿 วงปลอมหาย–โผล่ แต่วงจริงคลิกได้ตลอด
 function blinkCircles() {
-    circles.forEach(c => {
-        if (c.style.opacity === "0") {
+    circles.forEach((c, i) => {
+        if (i === realIndex) {
             c.style.opacity = "1";
             c.style.pointerEvents = "auto";
         } else {
-            c.style.opacity = "0";
-            c.style.pointerEvents = "none";
+            const hide = Math.random() < 0.5;
+            c.style.opacity = hide ? "0" : "1";
+            c.style.pointerEvents = hide ? "none" : "auto";
         }
     });
 }
 
 function randomSpeed() {
-    let s = 3 + Math.random() * 4;
+    const s = 3 + Math.random() * 3;
     return Math.random() < 0.5 ? s : -s;
 }
 
@@ -192,6 +198,7 @@ function stopGame() {
     clearInterval(directionInterval);
     clearInterval(blinkInterval);
     circles.forEach(c => c.remove());
+    circles.length = 0;
 }
 </script>
 
